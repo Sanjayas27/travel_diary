@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Travel Diary Holidays – Flight, Hotels & More</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+
+  <!-- ══════════════════════════════════════════════
+       🔧 STEP 1 — FILL IN YOUR KEYS BELOW
+       (Full instructions in SETUP_GUIDE.html)
+  ══════════════════════════════════════════════ -->
+  <script>
+    const CONFIG = {
+      SUPABASE_URL:  'https://xcubvzkbxdfcanowfkid.supabase.co',
+      SUPABASE_KEY:  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjdWJ2emtieGRmY2Fub3dma2lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTg0NzgsImV4cCI6MjA4ODY3NDQ3OH0.GzM7HXi7ypWKVESf4fu1bUAAJVusEQZRkmKZiCIPkPg',
+      EMAILJS_SERVICE_ID:  'service_gdia2zw',
+      EMAILJS_TEMPLATE_ID: 'template_gunwiyi',
+      EMAILJS_PUBLIC_KEY:  'HOYitLTV69hOx7fSn',
+      WHATSAPP_NUMBER: '918943444771',
+      OFFICE_EMAIL: 'reservation@traveldiaryholidays.com'
+    };
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <style>
+    :root {
+      --navy:#0a1628;--blue:#1565c0;--sky:#29b6f6;--cyan:#00e5ff;
+      --gold:#ffd600;--white:#fff;--gray:#b0bec5;--green:#00c853;
+      --red:#ff1744;--radius:16px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Lato',sans-serif;background:var(--navy);color:var(--white);overflow-x:hidden;width:100%;}
+
+    /* ── CONSISTENT PADDING ── */
+    :root{ --px: clamp(18px, 5vw, 80px); }
+
+    /* NAV */
+    nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;padding:14px var(--px);background:rgba(10,22,40,.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(41,182,246,.15);}
+    .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+    .logo-icon{width:48px;height:48px;background:var(--white);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--sky);flex-shrink:0;}
+    .logo-icon svg{width:30px;height:30px;}
+    .logo-text .brand{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.2rem;color:var(--white);letter-spacing:1px;}
+    .logo-text .sub{font-size:.65rem;letter-spacing:4px;color:var(--sky);text-transform:uppercase;}
+    .nav-links{display:flex;gap:28px;list-style:none;}
+    .nav-links a{color:var(--gray);text-decoration:none;font-size:.9rem;font-weight:600;transition:color .2s;}
+    .nav-links a:hover{color:var(--sky);}
+    .nav-cta{background:linear-gradient(135deg,var(--sky),var(--blue));color:var(--white);border:none;padding:10px 22px;border-radius:30px;font-weight:700;font-size:.9rem;cursor:pointer;transition:.2s;text-decoration:none;}
+    .nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(41,182,246,.4);}
+    .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;}
+    .hamburger span{width:26px;height:2px;background:var(--white);border-radius:2px;}
+    .mobile-menu{display:none;flex-direction:column;gap:16px;position:fixed;top:70px;left:0;right:0;background:rgba(10,22,40,.98);backdrop-filter:blur(20px);padding:24px var(--px);z-index:999;border-bottom:1px solid rgba(41,182,246,.2);}
+    .mobile-menu.open{display:flex;}
+    .mobile-menu a{color:var(--white);text-decoration:none;font-size:1rem;font-weight:600;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);}
+
+    /* HERO */
+    #hero{min-height:100vh;background:linear-gradient(135deg,#0a1628 0%,#0d2a4e 50%,#0a1628 100%);display:flex;align-items:center;padding:100px var(--px) 60px;position:relative;overflow:hidden;}
+    .hero-bg{position:absolute;inset:0;z-index:0;background:radial-gradient(ellipse 70% 60% at 70% 50%,rgba(21,101,192,.25) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(0,229,255,.1) 0%,transparent 60%);}
+    .hero-particles{position:absolute;inset:0;z-index:0;overflow:hidden;}
+    .hero-particles span{position:absolute;width:2px;height:2px;background:var(--sky);border-radius:50%;animation:floatUp linear infinite;opacity:.5;}
+    @keyframes floatUp{0%{transform:translateY(100vh);opacity:0;}10%{opacity:.5;}90%{opacity:.5;}100%{transform:translateY(-100px);opacity:0;}}
+    .hero-content{position:relative;z-index:1;max-width:600px;}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(41,182,246,.12);border:1px solid rgba(41,182,246,.3);padding:6px 16px;border-radius:30px;font-size:.8rem;color:var(--sky);font-weight:600;letter-spacing:1px;margin-bottom:20px;}
+    h1.hero-title{font-family:'Montserrat',sans-serif;font-weight:900;font-size:clamp(2.4rem,6vw,4rem);line-height:1.1;margin-bottom:20px;}
+    h1.hero-title span{color:var(--sky);}
+    .hero-desc{font-size:1.05rem;color:var(--gray);line-height:1.7;margin-bottom:36px;max-width:480px;}
+    .hero-btns{display:flex;gap:16px;flex-wrap:wrap;}
+    .btn-primary{background:linear-gradient(135deg,var(--sky),var(--blue));color:var(--white);padding:14px 32px;border-radius:40px;font-weight:700;font-size:1rem;text-decoration:none;transition:.2s;display:inline-block;}
+    .btn-primary:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(41,182,246,.5);}
+    .btn-outline{border:2px solid var(--sky);color:var(--sky);padding:12px 30px;border-radius:40px;font-weight:700;font-size:1rem;text-decoration:none;transition:.2s;display:inline-block;}
+    .btn-outline:hover{background:var(--sky);color:var(--navy);}
+    .hero-visual{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:0;width:55%;opacity:.1;pointer-events:none;}
+    .hero-plane{font-size:22rem;animation:planeDrift 8s ease-in-out infinite;}
+    @keyframes planeDrift{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-20px) rotate(-3deg);}}
+    .hero-stats{display:flex;gap:40px;margin-top:50px;flex-wrap:wrap;}
+    .stat-num{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.8rem;color:var(--sky);}
+    .stat-label{font-size:.8rem;color:var(--gray);text-transform:uppercase;letter-spacing:1px;}
+
+    /* SECTIONS */
+    section{padding:80px var(--px);}
+    .section-label{font-size:.75rem;color:var(--sky);font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+    .section-title{font-family:'Montserrat',sans-serif;font-weight:900;font-size:clamp(1.8rem,4vw,2.8rem);margin-bottom:16px;}
+    .section-title span{color:var(--sky);}
+    .section-sub{color:var(--gray);font-size:1rem;line-height:1.7;max-width:560px;margin-bottom:48px;}
+
+    /* BOOKING FORM */
+    #booking{background:linear-gradient(135deg,#0d2a4e 0%,var(--navy) 100%);box-sizing:border-box;}
+    .booking-card{background:rgba(255,255,255,.05);backdrop-filter:blur(20px);border:1px solid rgba(41,182,246,.2);border-radius:20px;padding:36px;box-shadow:0 24px 64px rgba(0,0,0,.4);width:100%;overflow:hidden;}
+    .booking-tabs{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;}
+    .tab-btn{padding:9px 20px;border-radius:30px;font-weight:700;font-size:.85rem;border:1.5px solid rgba(41,182,246,.3);background:transparent;color:var(--gray);cursor:pointer;transition:.2s;font-family:'Lato',sans-serif;}
+    .tab-btn.active,.tab-btn:hover{background:var(--sky);color:var(--navy);border-color:var(--sky);}
+    .booking-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;width:100%;}
+    .field-group{display:flex;flex-direction:column;gap:6px;min-width:0;}
+    .field-group label{font-size:.75rem;color:var(--sky);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+    .field-group input,.field-group select,.field-group textarea{background:rgba(255,255,255,.07);border:1px solid rgba(41,182,246,.2);color:var(--white);padding:12px 16px;border-radius:10px;font-size:.95rem;outline:none;transition:border .2s;font-family:'Lato',sans-serif;width:100%;max-width:100%;}
+    .field-group input::placeholder{color:rgba(255,255,255,.3);}
+    .field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--sky);}
+    .field-group select option{background:#0d2a4e;color:var(--white);}
+    .field-full{grid-column:1/-1;}
+    .booking-note{grid-column:1/-1;background:rgba(41,182,246,.08);border:1px solid rgba(41,182,246,.2);border-radius:10px;padding:14px 18px;font-size:.88rem;color:var(--gray);line-height:1.6;}
+    .booking-note strong{color:var(--sky);}
+    .enquire-btn{grid-column:1/-1;background:linear-gradient(135deg,var(--sky),var(--blue));border:none;color:var(--white);padding:16px;border-radius:12px;font-weight:700;font-size:1.05rem;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Lato',sans-serif;width:100%;}
+    .enquire-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(41,182,246,.4);}
+    .enquire-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+    /* TOAST */
+    #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:white;padding:14px 28px;border-radius:30px;font-weight:700;font-size:.95rem;opacity:0;transition:all .4s;z-index:9999;white-space:nowrap;box-shadow:0 8px 32px rgba(0,200,83,.4);pointer-events:none;}
+    #toast.error{background:var(--red);box-shadow:0 8px 32px rgba(255,23,68,.4);}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    /* SERVICES */
+    #services{background:linear-gradient(180deg,var(--navy) 0%,#0d1f3a 100%);}
+    .services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;}
+    .service-card{background:rgba(255,255,255,.04);border:1px solid rgba(41,182,246,.12);border-radius:var(--radius);padding:28px 24px;transition:.3s;position:relative;overflow:hidden;cursor:default;}
+    .service-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sky),var(--cyan));transform:scaleX(0);transform-origin:left;transition:.3s;}
+    .service-card:hover{transform:translateY(-6px);border-color:rgba(41,182,246,.35);box-shadow:0 16px 40px rgba(0,0,0,.3);}
+    .service-card:hover::before{transform:scaleX(1);}
+    .service-icon{font-size:2.4rem;margin-bottom:16px;}
+    .service-name{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1.05rem;margin-bottom:8px;}
+    .service-desc{font-size:.88rem;color:var(--gray);line-height:1.6;}
+
+    /* DESTINATIONS */
+    #destinations{background:#0a1628;}
+    .dest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;}
+    .dest-card{border-radius:var(--radius);overflow:hidden;position:relative;height:280px;cursor:pointer;transition:.3s;}
+    .dest-card:hover{transform:scale(1.02);}
+    .dest-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:6rem;}
+    .dest-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,22,40,.95) 0%,transparent 60%);}
+    .dest-info{position:absolute;bottom:20px;left:20px;right:20px;}
+    .dest-name{font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.3rem;}
+    .dest-price{font-size:.85rem;color:var(--sky);font-weight:700;margin-top:4px;}
+    .dest-tag{position:absolute;top:16px;right:16px;background:var(--gold);color:var(--navy);font-size:.7rem;font-weight:900;padding:4px 10px;border-radius:20px;letter-spacing:1px;}
+
+    /* WHY */
+    #why{background:linear-gradient(180deg,#0d1f3a 0%,var(--navy) 100%);}
+    .why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:28px;}
+    .why-card{text-align:center;padding:32px 20px;}
+    .why-icon-wrap{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(41,182,246,.15),rgba(21,101,192,.15));border:1.5px solid rgba(41,182,246,.25);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 16px;}
+    .why-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1rem;margin-bottom:8px;}
+    .why-desc{font-size:.87rem;color:var(--gray);line-height:1.6;}
+
+    /* PROCESS */
+    #process{background:#0a1628;}
+    .steps{display:flex;gap:0;flex-wrap:wrap;}
+    .step{flex:1;min-width:180px;text-align:center;padding:32px 20px;position:relative;}
+    .step:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:var(--sky);font-size:1.5rem;font-weight:900;}
+    .step-num{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.2rem;margin:0 auto 16px;box-shadow:0 8px 24px rgba(41,182,246,.3);}
+    .step-title{font-weight:700;font-size:1rem;margin-bottom:8px;font-family:'Montserrat',sans-serif;}
+    .step-desc{font-size:.85rem;color:var(--gray);line-height:1.6;}
+
+    /* TESTIMONIALS */
+    #testimonials{background:linear-gradient(180deg,var(--navy) 0%,#0d1f3a 100%);}
+    .testi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;}
+    .testi-card{background:rgba(255,255,255,.04);border:1px solid rgba(41,182,246,.12);border-radius:var(--radius);padding:28px 24px;}
+    .stars{color:var(--gold);font-size:1rem;margin-bottom:14px;letter-spacing:2px;}
+    .testi-text{font-size:.93rem;color:#cdd8e8;line-height:1.7;margin-bottom:20px;font-style:italic;}
+    .testi-author{display:flex;align-items:center;gap:12px;}
+    .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:900;font-family:'Montserrat',sans-serif;font-size:1rem;}
+    .author-name{font-weight:700;font-size:.9rem;}
+    .author-loc{font-size:.78rem;color:var(--gray);}
+
+    /* CONTACT */
+    #contact{background:linear-gradient(135deg,#0d2a4e 0%,var(--navy) 100%);}
+    .contact-wrap{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+    .contact-item{display:flex;gap:16px;margin-bottom:28px;align-items:flex-start;}
+    .c-icon{width:48px;height:48px;border-radius:12px;background:rgba(41,182,246,.12);border:1px solid rgba(41,182,246,.2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+    .c-label{font-size:.75rem;color:var(--sky);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+    .c-val{font-size:.95rem;color:var(--white);line-height:1.5;}
+
+    /* FOOTER */
+    footer{background:#060f1e;padding:60px var(--px) 30px;border-top:1px solid rgba(41,182,246,.1);}
+    .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px;}
+    .footer-desc{font-size:.88rem;color:var(--gray);line-height:1.7;margin-top:14px;max-width:280px;}
+    .footer-social{display:flex;gap:12px;margin-top:20px;}
+    .soc-btn{width:36px;height:36px;border-radius:8px;background:rgba(41,182,246,.1);border:1px solid rgba(41,182,246,.2);display:flex;align-items:center;justify-content:center;font-size:1rem;text-decoration:none;transition:.2s;}
+    .soc-btn:hover{background:var(--sky);transform:translateY(-2px);}
+    .footer-col h4{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.9rem;color:var(--white);margin-bottom:16px;letter-spacing:1px;}
+    .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+    .footer-col ul li a{color:var(--gray);text-decoration:none;font-size:.87rem;transition:color .2s;}
+    .footer-col ul li a:hover{color:var(--sky);}
+    .footer-bottom{border-top:1px solid rgba(255,255,255,.06);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+    .footer-bottom p{font-size:.83rem;color:var(--gray);}
+    .tm-badge{color:var(--sky);font-weight:700;}
+
+    /* WA FLOAT */
+    .wa-float{position:fixed;bottom:28px;right:28px;z-index:999;width:56px;height:56px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:1.8rem;box-shadow:0 8px 24px rgba(37,211,102,.5);text-decoration:none;transition:.2s;animation:waPulse 2s infinite;}
+    @keyframes waPulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,.5);}50%{box-shadow:0 8px 40px rgba(37,211,102,.8);}}
+    .wa-float:hover{transform:scale(1.1);}
+
+    .fade-in{opacity:0;transform:translateY(30px);transition:opacity .6s,transform .6s;}
+    .fade-in.visible{opacity:1;transform:translateY(0);}
+
+    /* ── TABLET (max 960px) ── */
+    @media(max-width:960px){
+      .contact-wrap{grid-template-columns:1fr;gap:32px;}
+      .footer-top{grid-template-columns:1fr 1fr;gap:28px;}
+      .steps{gap:12px;}
+      .why-grid{grid-template-columns:1fr 1fr;}
+      .services-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));}
+      .dest-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+      .testi-grid{grid-template-columns:1fr 1fr;}
+    }
+
+    /* ── MOBILE (max 700px) ── */
+    @media(max-width:700px){
+      /* Nav */
+      .nav-links,.nav-cta{display:none;}
+      .hamburger{display:flex;}
+      nav{padding:12px 20px;}
+      .logo-text .brand{font-size:1rem;}
+
+      /* Hero */
+      #hero{padding:90px 20px 48px;min-height:auto;}
+      .hero-visual{display:none;}
+      h1.hero-title{font-size:2rem;}
+      .hero-desc{font-size:.95rem;}
+      .hero-btns{flex-direction:column;gap:12px;}
+      .btn-primary,.btn-outline{text-align:center;padding:14px 20px;font-size:.95rem;}
+      .hero-stats{gap:20px;margin-top:32px;}
+      .stat-num{font-size:1.5rem;}
+      .stat-label{font-size:.72rem;}
+
+      /* Sections — consistent 20px padding both sides */
+      section{padding:56px 20px;}
+      .section-title{font-size:1.6rem;}
+      .section-sub{font-size:.92rem;margin-bottom:32px;}
+
+      /* Booking form */
+      .booking-card{padding:16px;}
+      .booking-tabs{gap:6px;}
+      .tab-btn{padding:8px 12px;font-size:.78rem;}
+      .booking-grid{grid-template-columns:1fr;gap:14px;width:100%;}
+      .field-group input,.field-group select,.field-group textarea{padding:13px 12px;font-size:.92rem;width:100%;max-width:100%;}
+      .enquire-btn{font-size:.92rem;padding:15px;width:100%;}
+      .booking-note{font-size:.8rem;padding:12px;}
+
+      /* Services */
+      .services-grid{grid-template-columns:1fr 1fr;gap:12px;}
+      .service-card{padding:20px 16px;}
+      .service-icon{font-size:2rem;margin-bottom:12px;}
+      .service-name{font-size:.95rem;}
+      .service-desc{font-size:.82rem;}
+
+      /* Destinations */
+      .dest-grid{grid-template-columns:1fr 1fr;gap:12px;}
+      .dest-card{height:200px;}
+      .dest-bg{font-size:4rem;}
+      .dest-name{font-size:1.05rem;}
+      .dest-price{font-size:.78rem;}
+
+      /* Why us */
+      .why-grid{grid-template-columns:1fr 1fr;gap:16px;}
+      .why-card{padding:20px 12px;}
+      .why-icon-wrap{width:56px;height:56px;font-size:1.6rem;}
+      .why-title{font-size:.92rem;}
+      .why-desc{font-size:.82rem;}
+
+      /* Process steps */
+      .steps{flex-direction:column;gap:0;}
+      .step{padding:20px 16px;border-bottom:1px solid rgba(41,182,246,.1);}
+      .step:last-child{border-bottom:none;}
+      .step:not(:last-child)::after{display:none;}
+      .step-num{width:42px;height:42px;font-size:1rem;margin-bottom:12px;}
+      .step-title{font-size:.95rem;}
+      .step-desc{font-size:.83rem;}
+
+      /* Testimonials */
+      .testi-grid{grid-template-columns:1fr;gap:14px;}
+      .testi-card{padding:20px 16px;}
+      .testi-text{font-size:.88rem;}
+
+      /* Contact */
+      .contact-item{gap:12px;}
+      .c-icon{width:40px;height:40px;font-size:1.2rem;}
+      .c-val{font-size:.88rem;}
+
+      /* Footer */
+      .footer-top{grid-template-columns:1fr;gap:28px;}
+      .footer-bottom{flex-direction:column;text-align:center;gap:8px;}
+      .footer-desc{max-width:100%;}
+      footer{padding:40px 20px 24px;}
+
+      /* Mobile menu */
+      .mobile-menu{padding:24px 20px;}
+
+      /* WhatsApp float */
+      .wa-float{bottom:20px;right:16px;width:50px;height:50px;font-size:1.6rem;}
+    }
+
+    /* ── SMALL MOBILE (max 400px) ── */
+    @media(max-width:400px){
+      section{padding:48px 16px;}
+      nav{padding:12px 16px;}
+      #hero{padding:86px 16px 40px;}
+      footer{padding:36px 16px 20px;}
+      .mobile-menu{padding:20px 16px;}
+      h1.hero-title{font-size:1.75rem;}
+      .services-grid{grid-template-columns:1fr;}
+      .dest-grid{grid-template-columns:1fr;}
+      .why-grid{grid-template-columns:1fr;}
+      .booking-tabs{flex-wrap:wrap;}
+      .tab-btn{flex:1;min-width:calc(50% - 6px);text-align:center;}
+    }
+  </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="logo-icon">
+      <svg viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="22" stroke="#1565c0" stroke-width="2.5" fill="none"/>
+        <path d="M14 24C14 16 20 11 27 14L36 18C40 20 40 28 36 30L27 34C20 37 14 32 14 24Z" fill="#1565c0"/>
+        <text x="16" y="28" font-family="Arial Black,sans-serif" font-weight="900" font-size="11" fill="white">TD</text>
+        <path d="M10 12Q24 6 38 10" stroke="#29b6f6" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <polygon points="38,8 40,11 36,11" fill="#29b6f6"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <div class="brand">Travel Diary</div>
+      <div class="sub">Holidays</div>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#booking">Book a Trip</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#destinations">Destinations</a></li>
+    <li><a href="#process">How It Works</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a class="nav-cta" href="#booking">✈ Enquire Now</a>
+  <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#booking" onclick="toggleMenu()">✈ Book a Trip</a>
+  <a href="#services" onclick="toggleMenu()">Services</a>
+  <a href="#destinations" onclick="toggleMenu()">Destinations</a>
+  <a href="#process" onclick="toggleMenu()">How It Works</a>
+  <a href="#contact" onclick="toggleMenu()">Contact</a>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-particles" id="particles"></div>
+  <div class="hero-content fade-in">
+    <div class="hero-badge">✈ Kerala's Trusted Travel Partner</div>
+    <h1 class="hero-title">Your Dream Trip<br>Starts <span>Right Here</span></h1>
+    <p class="hero-desc">Flight tickets, hotel bookings, visa assistance, holiday packages — everything handled with care by Travel Diary Holidays.</p>
+    <div class="hero-btns">
+      <a href="#booking" class="btn-primary">✈ Enquire Now</a>
+      <a href="#services" class="btn-outline">Explore Services</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">5000+</div><div class="stat-label">Happy Travellers</div></div>
+      <div class="stat"><div class="stat-num">100+</div><div class="stat-label">Destinations</div></div>
+      <div class="stat"><div class="stat-num">10+</div><div class="stat-label">Years Experience</div></div>
+    </div>
+  </div>
+  <div class="hero-visual"><div class="hero-plane">✈</div></div>
+</section>
+
+<!-- BOOKING ENQUIRY FORM -->
+<section id="booking">
+  <div class="section-label">Send an Enquiry</div>
+  <h2 class="section-title">Book Your <span>Trip</span></h2>
+  <p class="section-sub">Fill in your details below. Our team will <strong style="color:var(--sky)">call you back</strong> to confirm your booking at the best price — no payment needed here!</p>
+
+  <div class="booking-card fade-in">
+    <div class="booking-tabs">
+      <button class="tab-btn active" onclick="setType(this,'flight')">✈ Flight</button>
+      <button class="tab-btn" onclick="setType(this,'hotel')">🏨 Hotel</button>
+      <button class="tab-btn" onclick="setType(this,'package')">🌴 Holiday Package</button>
+      <button class="tab-btn" onclick="setType(this,'visa')">🛂 Visa</button>
+    </div>
+
+    <form id="bookingForm" onsubmit="submitEnquiry(event)">
+      <input type="hidden" id="serviceType" value="Flight"/>
+      <div class="booking-grid">
+
+        <!-- Personal -->
+        <div class="field-group">
+          <label>Full Name *</label>
+          <input type="text" id="fullName" placeholder="e.g. Arun Mathew" required/>
+        </div>
+        <div class="field-group">
+          <label>WhatsApp / Phone *</label>
+          <input type="tel" id="phone" placeholder="+91 98765 43210" required/>
+        </div>
+        <div class="field-group">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="your@email.com"/>
+        </div>
+        <div class="field-group">
+          <label>Number of Passengers</label>
+          <select id="passengers">
+            <option>1 Adult</option><option>2 Adults</option><option>3 Adults</option>
+            <option>4 Adults</option><option>Family (Adults + Children)</option><option>Group (6+)</option>
+          </select>
+        </div>
+
+        <!-- Flight fields -->
+        <div class="field-group" id="ff-from">
+          <label>From (City / Airport) *</label>
+          <select id="fromCity"><option value="">-- Select Departure --</option></select>
+        </div>
+        <div class="field-group" id="ff-to">
+          <label>To (City / Airport) *</label>
+          <select id="toCity"><option value="">-- Select Destination --</option></select>
+        </div>
+        <div class="field-group" id="ff-date">
+          <label>Travel Date *</label>
+          <input type="date" id="travelDate"/>
+        </div>
+        <div class="field-group" id="ff-return">
+          <label>Return Date (optional)</label>
+          <input type="date" id="returnDate"/>
+        </div>
+        <div class="field-group" id="ff-class">
+          <label>Travel Class</label>
+          <select id="travelClass">
+            <option>Economy</option><option>Business</option><option>First Class</option>
+          </select>
+        </div>
+
+        <!-- Other service fields -->
+        <div class="field-group" id="of-details" style="display:none;">
+          <label>Service Details *</label>
+          <input type="text" id="serviceDetails" placeholder="Describe your requirement..."/>
+        </div>
+        <div class="field-group" id="of-date" style="display:none;">
+          <label>Preferred Date</label>
+          <input type="date" id="preferredDate"/>
+        </div>
+
+        <!-- Notes -->
+        <div class="field-group field-full">
+          <label>Additional Notes</label>
+          <textarea id="notes" rows="3" placeholder="Special requirements, preferred airline, budget, etc..."></textarea>
+        </div>
+
+        <div class="booking-note">
+          📞 <strong>How this works:</strong> This is an <strong>enquiry form — not a payment page.</strong> Once you submit, our team will call you on your WhatsApp/phone to confirm your booking personally. You pay only after speaking with us.
+        </div>
+
+        <button type="submit" class="enquire-btn" id="submitBtn">
+          📨 Send Enquiry — We'll Call You Back!
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-label">What We Offer</div>
+  <h2 class="section-title">Our <span>Services</span></h2>
+  <p class="section-sub">From booking your flight to helping with your passport — we handle every detail of your journey.</p>
+  <div class="services-grid">
+    <div class="service-card fade-in"><div class="service-icon">✈️</div><div class="service-name">Flight Tickets</div><div class="service-desc">Domestic & international flights at the best rates. All airlines covered.</div></div>
+    <div class="service-card fade-in"><div class="service-icon">🚂</div><div class="service-name">Train & Bus Tickets</div><div class="service-desc">Quick bookings across India. Save time, travel comfortably.</div></div>
+    <div class="service-card fade-in"><div class="service-icon">🌴</div><div class="service-name">Holiday Packages</div><div class="service-desc">Curated packages for families, couples & groups. All-inclusive & customizable.</div></div>
+    <div class="service-card fade-in"><div class="service-icon">🛂</div><div class="service-name">Passport Assistance</div><div class="service-desc">New passport, renewal, and Tatkal — we guide you every step of the way.</div></div>
+    <div class="service-card fade-in"><div class="service-icon">📋</div><div class="service-name">Visa Assistance</div><div class="service-desc">Tourist, business & work visas for all countries. Fast processing.</div></div>
+    <div class="service-card fade-in"><div class="service-icon">📜</div><div class="service-name">Certificate Attestation</div><div class="service-desc">HRD, MEA, Embassy attestation for education & employment abroad.</div></div>
+    <div class="service-card fade-in"><div class="service-icon">🌐</div><div class="service-name">Certified Translation</div><div class="service-desc">Accurate certified document translation for visa and immigration.</div></div>
+    <div class="service-card fade-in"><div class="service-icon">🛡️</div><div class="service-name">Travel Insurance</div><div class="service-desc">Medical, cancellation, and baggage protection for all trips.</div></div>
+    <div class="service-card fade-in"><div class="service-icon">🏨</div><div class="service-name">Hotel Booking</div><div class="service-desc">Best deals worldwide — budget to luxury, we find the perfect stay.</div></div>
+    <div class="service-card fade-in"><div class="service-icon">🖊️</div><div class="service-name">Emigration Clearance</div><div class="service-desc">ECR passport holders — we handle your emigration clearance smoothly.</div></div>
+  </div>
+</section>
+
+<!-- DESTINATIONS -->
+<section id="destinations">
+  <div class="section-label">Popular Routes</div>
+  <h2 class="section-title">Top <span>Destinations</span></h2>
+  <p class="section-sub">Great fares, great memories. Click any destination to enquire.</p>
+  <div class="dest-grid">
+    <div class="dest-card fade-in" onclick="location.href='#booking'"><div class="dest-bg" style="background:linear-gradient(135deg,#1a3060,#0d2a55)">🕌</div><div class="dest-overlay"></div><div class="dest-tag">HOT</div><div class="dest-info"><div class="dest-name">Dubai, UAE</div><div class="dest-price">From ₹18,500/person</div></div></div>
+    <div class="dest-card fade-in" onclick="location.href='#booking'"><div class="dest-bg" style="background:linear-gradient(135deg,#003f5c,#0077b6)">🏖️</div><div class="dest-overlay"></div><div class="dest-info"><div class="dest-name">Maldives</div><div class="dest-price">From ₹32,000/person</div></div></div>
+    <div class="dest-card fade-in" onclick="location.href='#booking'"><div class="dest-bg" style="background:linear-gradient(135deg,#1b4332,#40916c)">🗺️</div><div class="dest-overlay"></div><div class="dest-tag">VISA FREE</div><div class="dest-info"><div class="dest-name">Thailand</div><div class="dest-price">From ₹22,000/person</div></div></div>
+    <div class="dest-card fade-in" onclick="location.href='#booking'"><div class="dest-bg" style="background:linear-gradient(135deg,#2d1b69,#6a0572)">🏰</div><div class="dest-overlay"></div><div class="dest-info"><div class="dest-name">Europe Tour</div><div class="dest-price">From ₹95,000/person</div></div></div>
+    <div class="dest-card fade-in" onclick="location.href='#booking'"><div class="dest-bg" style="background:linear-gradient(135deg,#145a32,#1e8449)">🌺</div><div class="dest-overlay"></div><div class="dest-tag">LOCAL</div><div class="dest-info"><div class="dest-name">Kerala, India</div><div class="dest-price">From ₹8,500/person</div></div></div>
+    <div class="dest-card fade-in" onclick="location.href='#booking'"><div class="dest-bg" style="background:linear-gradient(135deg,#1a237e,#283593)">🎑</div><div class="dest-overlay"></div><div class="dest-info"><div class="dest-name">Singapore</div><div class="dest-price">From ₹28,000/person</div></div></div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section id="why">
+  <div class="section-label">Why Choose Us</div>
+  <h2 class="section-title">Travel with <span>Confidence</span></h2>
+  <div class="why-grid">
+    <div class="why-card fade-in"><div class="why-icon-wrap">🏆</div><div class="why-title">Trusted & Certified</div><div class="why-desc">Government-approved travel agency serving Kerala for over a decade.</div></div>
+    <div class="why-card fade-in"><div class="why-icon-wrap">💰</div><div class="why-title">Best Price Guarantee</div><div class="why-desc">We compare fares across all airlines to get you the lowest prices always.</div></div>
+    <div class="why-card fade-in"><div class="why-icon-wrap">🕐</div><div class="why-title">24/7 Support</div><div class="why-desc">Always reachable via phone or WhatsApp for any travel emergency.</div></div>
+    <div class="why-card fade-in"><div class="why-icon-wrap">⚡</div><div class="why-title">Fast Processing</div><div class="why-desc">Visa, attestation, and ticket confirmations processed faster than anywhere.</div></div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="section-label">How It Works</div>
+  <h2 class="section-title">Book in <span>4 Simple Steps</span></h2>
+  <div class="steps">
+    <div class="step fade-in"><div class="step-num">1</div><div class="step-title">Fill Enquiry</div><div class="step-desc">Fill our enquiry form with your travel details and contact number.</div></div>
+    <div class="step fade-in"><div class="step-num">2</div><div class="step-title">We Call You</div><div class="step-desc">Our team calls you on WhatsApp to discuss options and best prices.</div></div>
+    <div class="step fade-in"><div class="step-num">3</div><div class="step-title">Confirm & Pay</div><div class="step-desc">Choose your option, pay securely, and we handle all the bookings.</div></div>
+    <div class="step fade-in"><div class="step-num">4</div><div class="step-title">Fly & Enjoy!</div><div class="step-desc">Receive all your tickets and documents. Have an amazing journey!</div></div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="section-label">Happy Customers</div>
+  <h2 class="section-title">What People <span>Say</span></h2>
+  <div class="testi-grid">
+    <div class="testi-card fade-in"><div class="stars">★★★★★</div><p class="testi-text">"Got my Dubai visa in just 3 days! The team was extremely helpful and made the whole process smooth. Highly recommend."</p><div class="testi-author"><div class="avatar">A</div><div><div class="author-name">Arun Mathew</div><div class="author-loc">Cochin, Kerala</div></div></div></div>
+    <div class="testi-card fade-in"><div class="stars">★★★★★</div><p class="testi-text">"Booked a Thailand package for our honeymoon — everything was perfectly arranged. Hotels, flights, sightseeing. Zero stress!"</p><div class="testi-author"><div class="avatar">P</div><div><div class="author-name">Priya & Rahul</div><div class="author-loc">Thrissur, Kerala</div></div></div></div>
+    <div class="testi-card fade-in"><div class="stars">★★★★★</div><p class="testi-text">"Certificate attestation for Saudi Arabia done flawlessly. Very professional, totally transparent pricing. Will always come back!"</p><div class="testi-author"><div class="avatar">S</div><div><div class="author-name">Sibin George</div><div class="author-loc">Angamaly, Kerala</div></div></div></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-label">Get In Touch</div>
+  <h2 class="section-title">Reach <span>Our Office</span></h2>
+  <div class="contact-wrap">
+    <div class="fade-in">
+      <div class="contact-item"><div class="c-icon">📞</div><div><div class="c-label">Phone / WhatsApp</div><div class="c-val">+91 89434 44771<br>+91 89434 44772</div></div></div>
+      <div class="contact-item"><div class="c-icon">📍</div><div><div class="c-label">Office Address</div><div class="c-val">KPBs Prime Trade Center<br>Angamaly, Cochin, Kerala</div></div></div>
+      <div class="contact-item"><div class="c-icon">🕐</div><div><div class="c-label">Working Hours</div><div class="c-val">Monday – Saturday<br>9:00 AM – 7:00 PM</div></div></div>
+      <div class="contact-item"><div class="c-icon">🌐</div><div><div class="c-label">Follow Us</div><div class="c-val">@TravelDiaryHolidays<br>on all platforms</div></div></div>
+    </div>
+    <div class="fade-in" style="background:rgba(255,255,255,.04);border:1px solid rgba(41,182,246,.15);border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:14px;">
+      <p style="color:var(--sky);font-weight:700;font-size:1rem;">📱 Quick Contact</p>
+      <a href="https://wa.me/918943444771" style="background:#25d366;color:white;padding:14px;border-radius:10px;font-weight:700;text-align:center;text-decoration:none;font-size:1rem;display:block;">💬 WhatsApp Us Now</a>
+      <a href="tel:+918943444771" style="background:rgba(41,182,246,.15);border:1px solid var(--sky);color:var(--sky);padding:14px;border-radius:10px;font-weight:700;text-align:center;text-decoration:none;font-size:1rem;display:block;">📞 Call +91 89434 44771</a>
+      <a href="tel:+918943444772" style="background:rgba(41,182,246,.1);border:1px solid rgba(41,182,246,.3);color:var(--gray);padding:14px;border-radius:10px;font-weight:700;text-align:center;text-decoration:none;font-size:1rem;display:block;">📞 Call +91 89434 44772</a>
+      <p style="color:var(--gray);font-size:.82rem;text-align:center;">Or fill the <a href="#booking" style="color:var(--sky);">enquiry form above</a> and we'll call you!</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <a class="nav-logo" href="#" style="text-decoration:none;">
+        <div class="logo-icon"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" stroke="#1565c0" stroke-width="2.5" fill="none"/><path d="M14 24C14 16 20 11 27 14L36 18C40 20 40 28 36 30L27 34C20 37 14 32 14 24Z" fill="#1565c0"/><text x="16" y="28" font-family="Arial Black,sans-serif" font-weight="900" font-size="11" fill="white">TD</text><path d="M10 12Q24 6 38 10" stroke="#29b6f6" stroke-width="2" fill="none" stroke-linecap="round"/><polygon points="38,8 40,11 36,11" fill="#29b6f6"/></svg></div>
+        <div class="logo-text"><div class="brand">Travel Diary</div><div class="sub">Holidays™</div></div>
+      </a>
+      <p class="footer-desc">Your trusted travel partner in Cochin, Kerala. From flights to visas — every journey made seamless.</p>
+      <div class="footer-social">
+        <a class="soc-btn" href="#">𝕏</a><a class="soc-btn" href="#">📸</a>
+        <a class="soc-btn" href="#">in</a><a class="soc-btn" href="#">f</a>
+        <a class="soc-btn" href="https://wa.me/918943444771">💬</a>
+      </div>
+    </div>
+    <div class="footer-col"><h4>Services</h4><ul><li><a href="#booking">Flight Tickets</a></li><li><a href="#booking">Train & Bus</a></li><li><a href="#booking">Holiday Packages</a></li><li><a href="#booking">Hotel Booking</a></li><li><a href="#booking">Travel Insurance</a></li></ul></div>
+    <div class="footer-col"><h4>Documents</h4><ul><li><a href="#booking">Passport Assistance</a></li><li><a href="#booking">Visa Assistance</a></li><li><a href="#booking">Attestation</a></li><li><a href="#booking">Translation</a></li><li><a href="#booking">Emigration Clearance</a></li></ul></div>
+    <div class="footer-col"><h4>Quick Links</h4><ul><li><a href="#booking">Book a Flight</a></li><li><a href="#destinations">Destinations</a></li><li><a href="#testimonials">Reviews</a></li><li><a href="#contact">Contact</a></li><li><a href="admin.html">Staff Login</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2024 <span class="tm-badge">Travel Diary Holidays™</span>. All rights reserved.</p>
+    <p>KPBs Prime Trade Center, Angamaly, Cochin · +91 89434 44771</p>
+  </div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/918943444771" title="Chat on WhatsApp">💬</a>
+
+<script>
+// ── Airports ──
+const AIRPORTS = [
+  // ── KERALA (most important for Travel Diary customers)
+  {code:'COK',city:'Kochi',name:'Cochin International Airport'},
+  {code:'TRV',city:'Thiruvananthapuram',name:'Trivandrum International Airport'},
+  {code:'CCJ',city:'Kozhikode (Calicut)',name:'Calicut International Airport'},
+  {code:'CNN',city:'Kannur',name:'Kannur International Airport'},
+
+  // ── SOUTH INDIA
+  {code:'MAA',city:'Chennai',name:'Chennai International Airport'},
+  {code:'BLR',city:'Bengaluru',name:'Kempegowda International Airport'},
+  {code:'HYD',city:'Hyderabad',name:'Rajiv Gandhi International Airport'},
+  {code:'IXM',city:'Madurai',name:'Madurai Airport'},
+  {code:'CJB',city:'Coimbatore',name:'Coimbatore International Airport'},
+  {code:'TIR',city:'Tirupati',name:'Tirupati Airport'},
+  {code:'VGA',city:'Vijayawada',name:'Vijayawada Airport'},
+  {code:'IXZ',city:'Port Blair (Andaman)',name:'Veer Savarkar International Airport'},
+  {code:'TRZ',city:'Tiruchirappalli',name:'Tiruchirappalli International Airport'},
+  {code:'IXE',city:'Mangalore',name:'Mangalore International Airport'},
+  {code:'HBX',city:'Hubli',name:'Hubli Airport'},
+  {code:'BEP',city:'Bellary',name:'Bellary Airport'},
+  {code:'VTZ',city:'Visakhapatnam',name:'Visakhapatnam Airport'},
+
+  // ── NORTH INDIA
+  {code:'DEL',city:'New Delhi',name:'Indira Gandhi International Airport'},
+  {code:'BOM',city:'Mumbai',name:'Chhatrapati Shivaji Maharaj Intl Airport'},
+  {code:'AMD',city:'Ahmedabad',name:'Sardar Vallabhbhai Patel Intl Airport'},
+  {code:'JAI',city:'Jaipur',name:'Jaipur International Airport'},
+  {code:'LKO',city:'Lucknow',name:'Chaudhary Charan Singh Intl Airport'},
+  {code:'VNS',city:'Varanasi',name:'Lal Bahadur Shastri Intl Airport'},
+  {code:'PAT',city:'Patna',name:'Jay Prakash Narayan Intl Airport'},
+  {code:'ATQ',city:'Amritsar',name:'Sri Guru Ram Dass Jee Intl Airport'},
+  {code:'IXC',city:'Chandigarh',name:'Chandigarh International Airport'},
+  {code:'SXR',city:'Srinagar',name:'Sheikh ul Alam International Airport'},
+  {code:'IXL',city:'Leh (Ladakh)',name:'Kushok Bakula Rimpochee Airport'},
+  {code:'AGR',city:'Agra',name:'Agra Airport'},
+  {code:'JDH',city:'Jodhpur',name:'Jodhpur Airport'},
+  {code:'UDR',city:'Udaipur',name:'Maharana Pratap Airport'},
+  {code:'BHO',city:'Bhopal',name:'Raja Bhoj Airport'},
+  {code:'IDR',city:'Indore',name:'Devi Ahilya Bai Holkar Airport'},
+  {code:'NAG',city:'Nagpur',name:'Dr. Babasaheb Ambedkar Intl Airport'},
+  {code:'RPR',city:'Raipur',name:'Swami Vivekananda Airport'},
+  {code:'BHU',city:'Bhavnagar',name:'Bhavnagar Airport'},
+  {code:'RAJ',city:'Rajkot',name:'Rajkot International Airport'},
+  {code:'STV',city:'Surat',name:'Surat Airport'},
+
+  // ── WEST INDIA
+  {code:'GOI',city:'Goa',name:'Goa International Airport (Mopa)'},
+  {code:'PNQ',city:'Pune',name:'Pune Airport'},
+  {code:'CCU',city:'Kolkata',name:'Netaji Subhas Chandra Bose Intl Airport'},
+
+  // ── EAST & NORTHEAST INDIA
+  {code:'GAU',city:'Guwahati',name:'Lokpriya Gopinath Bordoloi Intl Airport'},
+  {code:'IXB',city:'Bagdogra (Siliguri)',name:'Bagdogra International Airport'},
+  {code:'IMF',city:'Imphal',name:'Bir Tikendrajit International Airport'},
+  {code:'DIB',city:'Dibrugarh',name:'Dibrugarh Airport'},
+  {code:'IXA',city:'Agartala',name:'Maharaja Bir Bikram Airport'},
+  {code:'IXS',city:'Silchar',name:'Silchar Airport'},
+  {code:'BBI',city:'Bhubaneswar',name:'Biju Patnaik International Airport'},
+
+  // ── GULF (most popular from Kerala)
+  {code:'DXB',city:'Dubai, UAE',name:'Dubai International Airport'},
+  {code:'AUH',city:'Abu Dhabi, UAE',name:'Abu Dhabi International Airport'},
+  {code:'SHJ',city:'Sharjah, UAE',name:'Sharjah International Airport'},
+  {code:'AAN',city:'Al Ain, UAE',name:'Al Ain International Airport'},
+  {code:'KWI',city:'Kuwait City',name:'Kuwait International Airport'},
+  {code:'BAH',city:'Bahrain',name:'Bahrain International Airport'},
+  {code:'MCT',city:'Muscat, Oman',name:'Muscat International Airport'},
+  {code:'SLL',city:'Salalah, Oman',name:'Salalah Airport'},
+  {code:'RUH',city:'Riyadh, Saudi Arabia',name:'King Khalid International Airport'},
+  {code:'JED',city:'Jeddah, Saudi Arabia',name:'King Abdulaziz International Airport'},
+  {code:'DMM',city:'Dammam, Saudi Arabia',name:'King Fahd International Airport'},
+  {code:'MED',city:'Madinah, Saudi Arabia',name:'Prince Mohammad Bin Abdulaziz Airport'},
+  {code:'DOH',city:'Doha, Qatar',name:'Hamad International Airport'},
+
+  // ── SOUTHEAST ASIA
+  {code:'SIN',city:'Singapore',name:'Singapore Changi Airport'},
+  {code:'KUL',city:'Kuala Lumpur',name:'Kuala Lumpur International Airport'},
+  {code:'BKK',city:'Bangkok',name:'Suvarnabhumi Airport'},
+  {code:'HKT',city:'Phuket, Thailand',name:'Phuket International Airport'},
+  {code:'CNX',city:'Chiang Mai, Thailand',name:'Chiang Mai International Airport'},
+  {code:'SGN',city:'Ho Chi Minh City',name:'Tan Son Nhat International Airport'},
+  {code:'HAN',city:'Hanoi, Vietnam',name:'Noi Bai International Airport'},
+  {code:'CGK',city:'Jakarta, Indonesia',name:'Soekarno-Hatta International Airport'},
+  {code:'DPS',city:'Bali, Indonesia',name:'Ngurah Rai International Airport'},
+  {code:'MNL',city:'Manila, Philippines',name:'Ninoy Aquino International Airport'},
+  {code:'RGN',city:'Yangon, Myanmar',name:'Yangon International Airport'},
+  {code:'PNH',city:'Phnom Penh, Cambodia',name:'Phnom Penh International Airport'},
+
+  // ── SOUTH ASIA & NEARBY
+  {code:'CMB',city:'Colombo, Sri Lanka',name:'Bandaranaike International Airport'},
+  {code:'KTM',city:'Kathmandu, Nepal',name:'Tribhuvan International Airport'},
+  {code:'DAC',city:'Dhaka, Bangladesh',name:'Hazrat Shahjalal International Airport'},
+  {code:'MLE',city:'Male, Maldives',name:'Velana International Airport'},
+
+  // ── EAST ASIA
+  {code:'HKG',city:'Hong Kong',name:'Hong Kong International Airport'},
+  {code:'PEK',city:'Beijing, China',name:'Beijing Capital International Airport'},
+  {code:'PVG',city:'Shanghai, China',name:'Shanghai Pudong International Airport'},
+  {code:'NRT',city:'Tokyo, Japan',name:'Narita International Airport'},
+  {code:'ICN',city:'Seoul, South Korea',name:'Incheon International Airport'},
+
+  // ── AUSTRALIA
+  {code:'SYD',city:'Sydney, Australia',name:'Sydney Kingsford Smith Airport'},
+  {code:'MEL',city:'Melbourne, Australia',name:'Melbourne Airport'},
+  {code:'BNE',city:'Brisbane, Australia',name:'Brisbane Airport'},
+  {code:'PER',city:'Perth, Australia',name:'Perth Airport'},
+
+  // ── EUROPE
+  {code:'LHR',city:'London, UK',name:'London Heathrow Airport'},
+  {code:'LGW',city:'London Gatwick, UK',name:'London Gatwick Airport'},
+  {code:'CDG',city:'Paris, France',name:'Charles de Gaulle Airport'},
+  {code:'FRA',city:'Frankfurt, Germany',name:'Frankfurt Airport'},
+  {code:'AMS',city:'Amsterdam, Netherlands',name:'Amsterdam Schiphol Airport'},
+  {code:'FCO',city:'Rome, Italy',name:'Leonardo da Vinci International Airport'},
+  {code:'MXP',city:'Milan, Italy',name:'Milan Malpensa Airport'},
+  {code:'BCN',city:'Barcelona, Spain',name:'Barcelona El Prat Airport'},
+  {code:'MAD',city:'Madrid, Spain',name:'Adolfo Suárez Madrid–Barajas Airport'},
+  {code:'VIE',city:'Vienna, Austria',name:'Vienna International Airport'},
+  {code:'ZRH',city:'Zurich, Switzerland',name:'Zurich Airport'},
+  {code:'BRU',city:'Brussels, Belgium',name:'Brussels Airport'},
+  {code:'MUC',city:'Munich, Germany',name:'Munich Airport'},
+  {code:'CPH',city:'Copenhagen, Denmark',name:'Copenhagen Airport'},
+  {code:'ARN',city:'Stockholm, Sweden',name:'Stockholm Arlanda Airport'},
+
+  // ── NORTH AMERICA
+  {code:'JFK',city:'New York, USA',name:'John F. Kennedy International Airport'},
+  {code:'EWR',city:'Newark, USA',name:'Newark Liberty International Airport'},
+  {code:'ORD',city:'Chicago, USA',name:'O\'Hare International Airport'},
+  {code:'LAX',city:'Los Angeles, USA',name:'Los Angeles International Airport'},
+  {code:'SFO',city:'San Francisco, USA',name:'San Francisco International Airport'},
+  {code:'IAD',city:'Washington DC, USA',name:'Dulles International Airport'},
+  {code:'YYZ',city:'Toronto, Canada',name:'Toronto Pearson International Airport'},
+  {code:'YVR',city:'Vancouver, Canada',name:'Vancouver International Airport'},
+  {code:'YUL',city:'Montreal, Canada',name:'Montréal-Trudeau International Airport'},
+
+  // ── AFRICA & OTHER
+  {code:'NBO',city:'Nairobi, Kenya',name:'Jomo Kenyatta International Airport'},
+  {code:'JNB',city:'Johannesburg, South Africa',name:'O.R. Tambo International Airport'},
+  {code:'CAI',city:'Cairo, Egypt',name:'Cairo International Airport'},
+];
+
+(function populateAirports(){
+  const f=document.getElementById('fromCity'), t=document.getElementById('toCity');
+  AIRPORTS.forEach(a=>{
+    const o=`<option value="${a.code} – ${a.city}">${a.code} – ${a.city} (${a.name})</option>`;
+    f.innerHTML+=o; t.innerHTML+=o;
+  });
+})();
+
+// Min date = today
+const today=new Date().toISOString().split('T')[0];
+document.getElementById('travelDate').min=today;
+document.getElementById('returnDate').min=today;
+
+// Tab switch
+function setType(btn,type){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('serviceType').value=type.charAt(0).toUpperCase()+type.slice(1);
+  const isFlight=['flight','train'].includes(type);
+  ['ff-from','ff-to','ff-date','ff-return','ff-class'].forEach(id=>{
+    document.getElementById(id).style.display=isFlight?'':'none';
+  });
+  ['of-details','of-date'].forEach(id=>{
+    document.getElementById(id).style.display=isFlight?'none':'';
+  });
+  if(!isFlight){
+    const placeholders={hotel:'Destination city, check-in/out, room type...',package:'Destination, number of days, budget...',visa:'Country, purpose of visit...',train:'Route and seat class...'};
+    document.getElementById('serviceDetails').placeholder=placeholders[type]||'Describe your requirement...';
+  }
+}
+
+// Supabase init
+let sb=null;
+try{
+  if(CONFIG.SUPABASE_URL!=='YOUR_SUPABASE_URL'){
+    sb=window.supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY);
+    console.log('✅ Supabase connected');
+  } else {
+    console.warn('⚠️ Supabase keys not set yet');
+  }
+}catch(e){ console.error('Supabase init error:',e); }
+
+// EmailJS init
+try{ if(CONFIG.EMAILJS_PUBLIC_KEY!=='YOUR_PUBLIC_KEY') emailjs.init(CONFIG.EMAILJS_PUBLIC_KEY); }catch(e){}
+
+// Toast
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=type==='error'?'error show':'show';
+  setTimeout(()=>t.className='',4500);
+}
+
+// Submit
+async function submitEnquiry(e){
+  e.preventDefault();
+  const btn=document.getElementById('submitBtn');
+  const serviceType=document.getElementById('serviceType').value;
+  const isFlight=['Flight','Train'].includes(serviceType);
+
+  const data={
+    full_name:    document.getElementById('fullName').value.trim(),
+    phone:        document.getElementById('phone').value.trim(),
+    email:        document.getElementById('email').value.trim() || null,
+    service_type: serviceType,
+    passengers:   document.getElementById('passengers').value,
+    from_city:    isFlight ? document.getElementById('fromCity').value || null : null,
+    to_city:      isFlight ? document.getElementById('toCity').value || null : null,
+    travel_date:  isFlight ? document.getElementById('travelDate').value || null : null,
+    return_date:  isFlight ? document.getElementById('returnDate').value || null : null,
+    travel_class: isFlight ? document.getElementById('travelClass').value || null : null,
+    service_details: !isFlight ? document.getElementById('serviceDetails').value.trim() || null : null,
+    preferred_date:  !isFlight ? document.getElementById('preferredDate').value || null : null,
+    notes:        document.getElementById('notes').value.trim() || null,
+    status:       'New',
+    created_at:   new Date().toISOString()
+  };
+
+  // Validation
+  if(!data.full_name || !data.phone){
+    toast('⚠️ Please enter your name and phone number.','error');
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent='⏳ Sending your enquiry...';
+
+  let savedToDB = false;
+
+  // 1. Save to Supabase
+  if(sb){
+    try{
+      const { error } = await sb.from('enquiries').insert([data]);
+      if(error){
+        console.error('❌ Supabase insert error:', error.message);
+        toast('⚠️ Could not save to database: '+error.message,'error');
+      } else {
+        savedToDB = true;
+        console.log('✅ Saved to Supabase!');
+      }
+    }catch(err){
+      console.error('❌ Supabase exception:',err);
+    }
+  } else {
+    console.warn('⚠️ Supabase not configured — fill in your keys in CONFIG');
+  }
+
+  // 2. Send Email
+  if(CONFIG.EMAILJS_SERVICE_ID!=='YOUR_SERVICE_ID'){
+    try{
+      await emailjs.send(CONFIG.EMAILJS_SERVICE_ID, CONFIG.EMAILJS_TEMPLATE_ID, {
+        customer_name:  data.full_name,
+        customer_phone: data.phone,
+        customer_email: data.email || 'Not given',
+        service_type:   data.service_type,
+        from_city:      data.from_city || data.service_details || '-',
+        to_city:        data.to_city || '-',
+        travel_date:    data.travel_date || data.preferred_date || '-',
+        passengers:     data.passengers,
+        notes:          data.notes || 'None',
+        to_email:       CONFIG.OFFICE_EMAIL
+      });
+      console.log('✅ Email sent!');
+    }catch(err){
+      console.warn('⚠️ Email error:',err);
+    }
+  }
+
+  btn.disabled=false;
+
+  if(savedToDB || CONFIG.SUPABASE_URL==='YOUR_SUPABASE_URL'){
+    btn.textContent='✅ Enquiry Sent! We\'ll call you soon.';
+    btn.style.background='linear-gradient(135deg,#00c853,#1b5e20)';
+    toast('🎉 Enquiry sent! Our team will call you shortly.');
+    e.target.reset();
+    // Reset tab to Flight
+    document.querySelectorAll('.tab-btn')[0].click();
+  } else {
+    btn.textContent='❌ Failed to send. Try again.';
+    btn.style.background='linear-gradient(135deg,#ff1744,#b71c1c)';
+    toast('❌ Something went wrong. Please try again.','error');
+  }
+
+  setTimeout(()=>{
+    btn.textContent='📨 Send Enquiry — We\'ll Call You Back!';
+    btn.style.background='';
+  },5000);
+}
+
+// Particles
+(function(){
+  const pc=document.getElementById('particles');
+  for(let i=0;i<30;i++){
+    const s=document.createElement('span');
+    s.style.left=Math.random()*100+'%';
+    s.style.animationDuration=(8+Math.random()*12)+'s';
+    s.style.animationDelay=(Math.random()*10)+'s';
+    s.style.width=s.style.height=(1+Math.random()*3)+'px';
+    pc.appendChild(s);
+  }
+})();
+
+// Fade in observer
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{ if(e.isIntersecting){ setTimeout(()=>e.target.classList.add('visible'),i*80); obs.unobserve(e.target); } });
+},{threshold:.1});
+document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
+
+// Mobile menu
+function toggleMenu(){ document.getElementById('mobileMenu').classList.toggle('open'); }
+</script>
+</body>
+</html>

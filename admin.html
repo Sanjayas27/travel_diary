@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel – Travel Diary Holidays</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet"/>
+
+  <!-- ══ PASTE YOUR SUPABASE KEYS HERE ══ -->
+ <script>
+    const SUPABASE_URL = 'https://xcubvzkbxdfcanowfkid.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhjdWJ2emtieGRmY2Fub3dma2lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTg0NzgsImV4cCI6MjA4ODY3NDQ3OH0.GzM7HXi7ypWKVESf4fu1bUAAJVusEQZRkmKZiCIPkPg';
+    // ✅ No password needed here anymore — stored securely in Supabase!
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
+    :root{
+      --navy:#0a1628;--blue:#1565c0;--sky:#29b6f6;--gold:#ffd600;
+      --white:#fff;--gray:#b0bec5;--green:#00c853;--red:#ff4444;
+      --orange:#ff9800;--radius:12px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Lato',sans-serif;background:#060f1e;color:var(--white);min-height:100vh;}
+
+    /* ── LOGIN ── */
+    #loginScreen{position:fixed;inset:0;background:linear-gradient(135deg,#060f1e,#0d2a4e);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+    .login-box{background:rgba(255,255,255,.05);border:1px solid rgba(41,182,246,.2);border-radius:20px;padding:40px 32px;width:100%;max-width:380px;text-align:center;}
+    .login-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.6rem;color:var(--sky);margin-bottom:6px;}
+    .login-sub{color:var(--gray);font-size:.88rem;margin-bottom:28px;}
+    .login-box input{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(41,182,246,.25);color:var(--white);padding:14px 16px;border-radius:10px;font-size:1rem;outline:none;margin-bottom:14px;font-family:'Lato',sans-serif;}
+    .login-box input::placeholder{color:rgba(255,255,255,.3);}
+    .login-box input:focus{border-color:var(--sky);}
+    .login-btn{width:100%;background:linear-gradient(135deg,var(--sky),var(--blue));border:none;color:var(--white);padding:15px;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;transition:.2s;font-family:'Lato',sans-serif;}
+    .login-btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(41,182,246,.4);}
+    .login-err{color:#ff6b6b;font-size:.85rem;margin-top:12px;display:none;}
+
+    /* ── MAIN ── */
+    #mainScreen{display:none;}
+
+    /* ── HEADER ── */
+    header{background:rgba(10,22,40,.97);backdrop-filter:blur(12px);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(41,182,246,.15);position:sticky;top:0;z-index:50;}
+    .h-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.05rem;color:var(--sky);}
+    .h-logo span{color:var(--white);}
+    .h-right{display:flex;align-items:center;gap:10px;}
+    .hdr-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--white);padding:8px 14px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;font-family:'Lato',sans-serif;}
+    .hdr-btn:hover{background:rgba(41,182,246,.2);border-color:var(--sky);color:var(--sky);}
+    .hdr-btn.red{border-color:rgba(255,68,68,.3);color:#ff6b6b;}
+    .hdr-btn.red:hover{background:rgba(255,68,68,.2);}
+
+    /* ── TABS ── */
+    .tab-bar{display:flex;gap:4px;padding:16px 16px 0;border-bottom:1px solid rgba(41,182,246,.1);}
+    .tab{padding:10px 20px;border-radius:10px 10px 0 0;font-weight:700;font-size:.88rem;cursor:pointer;color:var(--gray);border:1px solid transparent;border-bottom:none;transition:.2s;font-family:'Lato',sans-serif;background:transparent;}
+    .tab.active{background:rgba(41,182,246,.12);color:var(--sky);border-color:rgba(41,182,246,.2);}
+    .tab:hover:not(.active){color:var(--white);}
+
+    /* ── DASHBOARD ── */
+    .page{display:none;padding:20px;}
+    .page.active{display:block;}
+
+    /* STATS */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:24px;}
+    .stat-card{background:rgba(255,255,255,.04);border:1px solid rgba(41,182,246,.12);border-radius:var(--radius);padding:18px;text-align:center;}
+    .stat-card .num{font-family:'Montserrat',sans-serif;font-weight:900;font-size:2rem;margin-bottom:4px;}
+    .stat-card .lbl{font-size:.75rem;color:var(--gray);text-transform:uppercase;letter-spacing:1px;}
+    .stat-new .num{color:var(--sky);}
+    .stat-total .num{color:var(--gold);}
+    .stat-booked .num{color:var(--green);}
+    .stat-today .num{color:var(--orange);}
+
+    /* FILTERS */
+    .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
+    .filters input,.filters select{background:rgba(255,255,255,.07);border:1px solid rgba(41,182,246,.2);color:var(--white);padding:10px 14px;border-radius:8px;font-size:.88rem;outline:none;font-family:'Lato',sans-serif;transition:.2s;}
+    .filters select option{background:#0a1628;}
+    .filters input::placeholder{color:rgba(255,255,255,.3);}
+    .filters input:focus,.filters select:focus{border-color:var(--sky);}
+
+    /* TABLE */
+    .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid rgba(41,182,246,.12);}
+    table{width:100%;border-collapse:collapse;font-size:.85rem;}
+    th{background:rgba(21,101,192,.25);padding:12px 14px;text-align:left;font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:var(--sky);font-weight:700;white-space:nowrap;}
+    td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:rgba(255,255,255,.02);}
+
+    /* BADGES */
+    .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.5px;}
+    .badge-new{background:rgba(41,182,246,.2);color:var(--sky);}
+    .badge-called{background:rgba(255,152,0,.2);color:var(--orange);}
+    .badge-booked{background:rgba(0,200,83,.2);color:var(--green);}
+    .badge-cancelled{background:rgba(255,68,68,.2);color:var(--red);}
+
+    /* ACTION BUTTONS */
+    .action-btn{padding:5px 10px;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;border:none;margin:2px;transition:.2s;font-family:'Lato',sans-serif;white-space:nowrap;}
+    .btn-called{background:rgba(255,152,0,.15);color:var(--orange);border:1px solid rgba(255,152,0,.3);}
+    .btn-booked{background:rgba(0,200,83,.15);color:var(--green);border:1px solid rgba(0,200,83,.3);}
+    .btn-cancel{background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.25);}
+    .btn-delete{background:rgba(255,0,0,.15);color:#ff2222;border:1px solid rgba(255,0,0,.3);}
+    .action-btn:hover{transform:translateY(-1px);filter:brightness(1.2);}
+
+    .phone-link{color:var(--sky);text-decoration:none;font-weight:700;}
+    .phone-link:hover{text-decoration:underline;}
+    .wa-link{display:inline-block;background:#25d366;color:white;padding:3px 9px;border-radius:6px;font-size:.75rem;font-weight:700;text-decoration:none;margin-top:4px;}
+    #loadingMsg{padding:48px;text-align:center;color:var(--sky);font-size:1rem;}
+    .no-data{text-align:center;padding:48px;color:var(--gray);}
+
+    /* ── SETTINGS PAGE ── */
+    .settings-wrap{max-width:520px;}
+    .settings-section{background:rgba(255,255,255,.04);border:1px solid rgba(41,182,246,.12);border-radius:var(--radius);padding:24px;margin-bottom:20px;}
+    .settings-section h3{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1rem;color:var(--sky);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+    .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+    .form-group label{font-size:.75rem;color:var(--sky);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+    .form-group input{background:rgba(255,255,255,.07);border:1px solid rgba(41,182,246,.2);color:var(--white);padding:12px 14px;border-radius:8px;font-size:.95rem;outline:none;transition:.2s;font-family:'Lato',sans-serif;}
+    .form-group input::placeholder{color:rgba(255,255,255,.3);}
+    .form-group input:focus{border-color:var(--sky);}
+    .save-btn{background:linear-gradient(135deg,var(--sky),var(--blue));border:none;color:var(--white);padding:12px 28px;border-radius:10px;font-weight:700;font-size:.95rem;cursor:pointer;transition:.2s;font-family:'Lato',sans-serif;}
+    .save-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(41,182,246,.4);}
+    .success-msg{color:var(--green);font-size:.88rem;margin-top:10px;display:none;font-weight:700;}
+    .error-msg{color:var(--red);font-size:.88rem;margin-top:10px;display:none;font-weight:700;}
+    .info-box{background:rgba(41,182,246,.07);border:1px solid rgba(41,182,246,.15);border-radius:8px;padding:12px 16px;font-size:.85rem;color:var(--gray);line-height:1.6;margin-bottom:16px;}
+    .info-box strong{color:var(--sky);}
+
+    /* ── CONFIRM MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px;}
+    .modal-overlay.show{display:flex;}
+    .modal{background:#0d1f3a;border:1px solid rgba(255,68,68,.3);border-radius:16px;padding:32px;max-width:360px;width:100%;text-align:center;}
+    .modal h3{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.2rem;color:var(--red);margin-bottom:12px;}
+    .modal p{color:var(--gray);font-size:.92rem;line-height:1.6;margin-bottom:24px;}
+    .modal-btns{display:flex;gap:12px;justify-content:center;}
+    .modal-cancel{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:var(--white);padding:10px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;}
+    .modal-confirm{background:var(--red);border:none;color:var(--white);padding:10px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-family:'Lato',sans-serif;}
+    .modal-confirm:hover{background:#cc0000;}
+
+    /* ── TOAST ── */
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:white;padding:12px 24px;border-radius:30px;font-weight:700;font-size:.9rem;opacity:0;transition:all .4s;z-index:9999;white-space:nowrap;pointer-events:none;}
+    #toast.error{background:var(--red);}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    @media(max-width:600px){
+      .page{padding:12px;}
+      .filters{flex-direction:column;}
+      .h-logo{font-size:.9rem;}
+      .hdr-btn span{display:none;}
+      .tab{padding:8px 12px;font-size:.8rem;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ══════════ LOGIN SCREEN ══════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">✈ Travel Diary</div>
+    <div class="login-sub">Staff Admin Panel — Secure Login</div>
+    <input type="text" id="loginUsername" placeholder="Username" autocomplete="username"/>
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">🔐 Login to Dashboard</button>
+    <div class="login-err" id="loginErr">❌ Wrong username or password. Try again.</div>
+  </div>
+</div>
+
+<!-- ══════════ MAIN SCREEN ══════════ -->
+<div id="mainScreen">
+
+  <!-- Header -->
+  <header>
+    <div class="h-logo">✈ Travel Diary <span>Admin</span></div>
+    <div class="h-right">
+      <button class="hdr-btn" onclick="loadEnquiries()">🔄 <span>Refresh</span></button>
+      <button class="hdr-btn" onclick="switchTab('settings')">⚙️ <span>Settings</span></button>
+      <button class="hdr-btn red" onclick="logout()">🚪 <span>Logout</span></button>
+    </div>
+  </header>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab active" id="tab-enquiries" onclick="switchTab('enquiries')">📋 Enquiries</div>
+    <div class="tab" id="tab-settings" onclick="switchTab('settings')">⚙️ Settings</div>
+  </div>
+
+  <!-- ── ENQUIRIES PAGE ── -->
+  <div class="page active" id="page-enquiries">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card stat-new"><div class="num" id="statNew">–</div><div class="lbl">New</div></div>
+      <div class="stat-card stat-total"><div class="num" id="statTotal">–</div><div class="lbl">Total</div></div>
+      <div class="stat-card stat-booked"><div class="num" id="statBooked">–</div><div class="lbl">Booked</div></div>
+      <div class="stat-card stat-today"><div class="num" id="statToday">–</div><div class="lbl">Today</div></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <input type="text" id="searchBox" placeholder="🔍 Search name, phone, city..." oninput="renderTable()" style="flex:1;min-width:180px;"/>
+      <select id="filterStatus" onchange="renderTable()">
+        <option value="">All Status</option>
+        <option>New</option><option>Called</option>
+        <option>Booked</option><option>Cancelled</option>
+      </select>
+      <select id="filterService" onchange="renderTable()">
+        <option value="">All Services</option>
+        <option>Flight</option><option>Hotel</option>
+        <option>Package</option><option>Visa</option><option>Train</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div id="loadingMsg">⏳ Loading enquiries...</div>
+      <table id="enquiryTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Service</th>
+            <th>Route / Details</th>
+            <th>Date</th>
+            <th>Passengers</th>
+            <th>Status & Notes</th>
+            <th>Actions</th>
+            <th>Received</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div id="noData" class="no-data" style="display:none;">📭 No enquiries found.</div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS PAGE ── -->
+  <div class="page" id="page-settings">
+    <div class="settings-wrap">
+
+      <!-- Change Username -->
+      <div class="settings-section">
+        <h3>👤 Change Username</h3>
+        <div class="info-box">
+          Current username: <strong id="currentUsernameDisplay">–</strong><br>
+          Your brother can change this to any name he likes — for example his own name.
+        </div>
+        <div class="form-group">
+          <label>New Username</label>
+          <input type="text" id="newUsername" placeholder="e.g. TravelDiary or your brother's name"/>
+        </div>
+        <div class="form-group">
+          <label>Current Password (to confirm)</label>
+          <input type="password" id="confirmPassForUsername" placeholder="Enter current password"/>
+        </div>
+        <button class="save-btn" onclick="changeUsername()">💾 Save Username</button>
+        <div class="success-msg" id="usernameSuccess">✅ Username updated successfully!</div>
+        <div class="error-msg" id="usernameError"></div>
+      </div>
+
+      <!-- Change Password -->
+      <div class="settings-section">
+        <h3>🔐 Change Password</h3>
+        <div class="info-box">
+          Choose a strong password your brother will remember easily.<br>
+          <strong>Tip:</strong> Use a mix of letters and numbers — e.g. <strong>Travel@2025</strong>
+        </div>
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" id="currentPassword" placeholder="Enter current password"/>
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" id="newPassword" placeholder="Enter new password"/>
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirmPassword" placeholder="Repeat new password"/>
+        </div>
+        <button class="save-btn" onclick="changePassword()">🔐 Save New Password</button>
+        <div class="success-msg" id="passwordSuccess">✅ Password updated successfully!</div>
+        <div class="error-msg" id="passwordError"></div>
+      </div>
+
+      <!-- About -->
+      <div class="settings-section">
+        <h3>ℹ️ Admin Info</h3>
+        <div class="info-box" style="margin:0;">
+          <strong>Website:</strong> Travel Diary Holidays<br>
+          <strong>Office:</strong> KPBs Prime Trade Center, Angamaly, Cochin<br>
+          <strong>Phone:</strong> +91 89434 44771 / 44772<br><br>
+          ⚠️ <strong>Important:</strong> Username and password changes are saved on this device/browser only. If you open the admin panel on a different device, use the original credentials unless you update the file too.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRM MODAL -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+      <h3>🗑️ Delete Enquiry?</h3>
+      <p>Are you sure you want to permanently delete this enquiry? This cannot be undone.</p>
+      <div class="modal-btns">
+        <button class="modal-cancel" id="btnCancelDelete">Cancel</button>
+        <button class="modal-confirm" id="btnConfirmDelete">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end mainScreen -->
+
+<script>
+// ══════════════════════════════════
+// SUPABASE INIT
+// ══════════════════════════════════
+let sb = null;
+let allEnquiries = [];
+let loggedInUsername = '';
+
+function initSupabase(){
+  if(SUPABASE_URL !== 'YOUR_SUPABASE_URL'){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+}
+initSupabase();
+
+// ══════════════════════════════════
+// LOGIN — checks Supabase admin_users table
+// ══════════════════════════════════
+async function doLogin(){
+  const u = document.getElementById('loginUsername').value.trim();
+  const p = document.getElementById('loginPassword').value;
+  const btn = document.querySelector('.login-btn');
+  const err = document.getElementById('loginErr');
+  err.style.display = 'none';
+
+  if(!u || !p){
+    err.textContent = '❌ Please enter username and password.';
+    err.style.display = 'block';
+    return;
+  }
+
+  // If Supabase not configured yet — use fallback
+  if(!sb){
+    if(u === 'admin' && p === 'traveldiaryadmin2024'){
+      loginSuccess(u);
+    } else {
+      err.textContent = '❌ Wrong username or password.';
+      err.style.display = 'block';
+    }
+    return;
+  }
+
+  btn.textContent = '⏳ Checking...';
+  btn.disabled = true;
+
+  try{
+    const { data, error } = await sb
+      .from('admin_users')
+      .select('*')
+      .eq('username', u)
+      .eq('password', p)
+      .single();
+
+    if(error || !data){
+      err.textContent = '❌ Wrong username or password. Try again.';
+      err.style.display = 'block';
+    } else {
+      loginSuccess(u);
+    }
+  } catch(e){
+    err.textContent = '❌ Connection error. Check Supabase config.';
+    err.style.display = 'block';
+  }
+
+  btn.textContent = '🔐 Login to Dashboard';
+  btn.disabled = false;
+}
+
+function loginSuccess(username){
+  loggedInUsername = username;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = 'block';
+  document.getElementById('currentUsernameDisplay').textContent = username;
+  loadEnquiries();
+}
+
+function logout(){
+  loggedInUsername = '';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('mainScreen').style.display = 'none';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginUsername').value = '';
+}
+
+// ══════════════════════════════════
+// TABS
+// ══════════════════════════════════
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('page-' + tab).classList.add('active');
+}
+
+// ══════════════════════════════════
+// LOAD ENQUIRIES
+// ══════════════════════════════════
+
+function loadDemoData(){
+  allEnquiries = [
+    {id:1,full_name:'Arun Mathew',phone:'+91 98765 43210',email:'arun@gmail.com',service_type:'Flight',from_city:'COK – Kochi',to_city:'DXB – Dubai, UAE',travel_date:'2025-12-25',passengers:'2 Adults',status:'New',notes:'Window seats preferred',created_at:new Date().toISOString()},
+    {id:2,full_name:'Priya Nair',phone:'+91 87654 32109',email:'',service_type:'Visa',service_details:'UAE Tourist Visa',preferred_date:'2025-12-20',passengers:'1 Adult',status:'Called',notes:'First time abroad',created_at:new Date(Date.now()-86400000).toISOString()},
+    {id:3,full_name:'Sibin George',phone:'+91 76543 21098',email:'sibin@gmail.com',service_type:'Package',service_details:'Thailand honeymoon 5 nights',preferred_date:'2026-01-10',passengers:'2 Adults',status:'Booked',notes:'Budget ₹60,000',created_at:new Date(Date.now()-172800000).toISOString()},
+  ];
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('enquiryTable').style.display = 'table';
+  updateStats(); renderTable();
+}
+
+async function loadEnquiries(){
+  if(!sb){
+    document.getElementById('loadingMsg').innerHTML =
+      '⚠️ <strong>Supabase not configured yet.</strong><br><br>Add your Supabase URL and Key to the file. Showing demo data for now.';
+    loadDemoData();
+    return;
+  }
+  document.getElementById('loadingMsg').style.display = 'block';
+  document.getElementById('enquiryTable').style.display = 'none';
+  document.getElementById('noData').style.display = 'none';
+  try{
+    const {data, error} = await sb.from('enquiries').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    allEnquiries = data || [];
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('enquiryTable').style.display = 'table';
+    updateStats(); renderTable();
+  } catch(err){
+    document.getElementById('loadingMsg').innerHTML = '❌ Error: ' + err.message;
+  }
+}
+
+// ══════════════════════════════════
+// STATS
+// ══════════════════════════════════
+function updateStats(){
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('statTotal').textContent = allEnquiries.length;
+  document.getElementById('statNew').textContent = allEnquiries.filter(e=>e.status==='New').length;
+  document.getElementById('statBooked').textContent = allEnquiries.filter(e=>e.status==='Booked').length;
+  document.getElementById('statToday').textContent = allEnquiries.filter(e=>e.created_at&&e.created_at.startsWith(today)).length;
+}
+
+// ══════════════════════════════════
+// RENDER TABLE
+// ══════════════════════════════════
+function renderTable(){
+  const search  = document.getElementById('searchBox').value.toLowerCase();
+  const status  = document.getElementById('filterStatus').value;
+  const service = document.getElementById('filterService').value;
+
+  const filtered = allEnquiries.filter(e=>{
+    const ms = !search ||
+      (e.full_name||'').toLowerCase().includes(search) ||
+      (e.phone||'').includes(search) ||
+      (e.from_city||'').toLowerCase().includes(search) ||
+      (e.to_city||'').toLowerCase().includes(search) ||
+      (e.service_details||'').toLowerCase().includes(search);
+    return ms && (!status||e.status===status) && (!service||e.service_type===service);
+  });
+
+  const tbody = document.getElementById('tableBody');
+  if(!filtered.length){
+    tbody.innerHTML = '';
+    document.getElementById('noData').style.display = 'block';
+    return;
+  }
+  document.getElementById('noData').style.display = 'none';
+
+  tbody.innerHTML = filtered.map((e,i)=>{
+    const bc = {New:'badge-new',Called:'badge-called',Booked:'badge-booked',Cancelled:'badge-cancelled'}[e.status]||'badge-new';
+    const route = (e.service_type==='Flight'||e.service_type==='Train')
+      ? `${e.from_city||'–'} → ${e.to_city||'–'}`
+      : (e.service_details||'–');
+    const dateStr = e.travel_date || e.preferred_date || '–';
+    const received = e.created_at
+      ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      : '–';
+    const waNum = (e.phone||'').replace(/\D/g,'');
+
+    return `<tr id="row-${e.id}">
+      <td style="color:var(--gray);font-size:.8rem;">${i+1}</td>
+      <td>
+        <strong>${e.full_name||'–'}</strong><br>
+        <a class="phone-link" href="tel:${e.phone}">${e.phone||'–'}</a><br>
+        ${e.email?`<span style="color:var(--gray);font-size:.78rem;">${e.email}</span><br>`:''}
+        <a class="wa-link" href="https://wa.me/${waNum}" target="_blank">💬 WhatsApp</a>
+      </td>
+      <td><span class="badge badge-new" style="background:rgba(41,182,246,.12)">${e.service_type||'–'}</span></td>
+      <td style="max-width:180px;word-break:break-word;font-size:.83rem;">${route}</td>
+      <td style="font-size:.83rem;">${dateStr}${e.return_date?`<br><span style="color:var(--gray);">↩ ${e.return_date}</span>`:''}</td>
+      <td style="font-size:.83rem;">${e.passengers||'–'}${e.travel_class?`<br><span style="color:var(--gray);">${e.travel_class}</span>`:''}</td>
+      <td>
+        <span class="badge ${bc}">${e.status||'New'}</span>
+        ${e.notes?`<br><span style="color:var(--gray);font-size:.78rem;font-style:italic;display:block;margin-top:4px;">${e.notes.substring(0,60)}${e.notes.length>60?'...':''}</span>`:''}
+      </td>
+      <td style="white-space:nowrap;">
+        <button class="action-btn btn-called"  data-id="${e.id}" data-status="Called">📞 Called</button><br>
+        <button class="action-btn btn-booked"  data-id="${e.id}" data-status="Booked">✅ Booked</button><br>
+        <button class="action-btn btn-cancel"  data-id="${e.id}" data-status="Cancelled">✗ Cancel</button><br>
+        <button class="action-btn btn-delete" data-id="${e.id}">🗑️ Delete</button>
+      </td>
+      <td style="color:var(--gray);font-size:.75rem;white-space:nowrap;">${received}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════
+// UPDATE STATUS
+// ══════════════════════════════════
+async function updateStatus(id, newStatus){
+  const numId = isNaN(id) ? id : Number(id);
+  if(!sb){
+    const e = allEnquiries.find(x=>String(x.id)===String(id));
+    if(e){ e.status=newStatus; updateStats(); renderTable(); }
+    showToast('Status updated to ' + newStatus);
+    return;
+  }
+  try{
+    await sb.from('enquiries').update({status:newStatus}).eq('id', numId);
+    const e = allEnquiries.find(x=>String(x.id)===String(id));
+    if(e){ e.status=newStatus; updateStats(); renderTable(); }
+    showToast('✅ Status updated to ' + newStatus);
+  } catch(err){ showToast('❌ Error: '+err.message,'error'); }
+}
+
+// ══════════════════════════════════
+// DELETE ENQUIRY
+// ══════════════════════════════════
+let deleteTargetId = null;
+
+function askDelete(id){
+  console.log('askDelete called with id:', id, typeof id);
+  deleteTargetId = id;
+  console.log('deleteTargetId set to:', deleteTargetId);
+  document.getElementById('deleteModal').classList.add('show');
+}
+
+function closeDeleteModal(){
+  deleteTargetId = null;
+  document.getElementById('deleteModal').classList.remove('show');
+}
+
+async function confirmDelete(){
+  const id = deleteTargetId;  // save id FIRST
+  if(!id) return;
+  deleteTargetId = null;
+  document.getElementById('deleteModal').classList.remove('show');
+
+  if(!sb){
+    allEnquiries = allEnquiries.filter(e=>e.id!==id);
+    updateStats(); renderTable();
+    showToast('🗑️ Enquiry deleted');
+    return;
+  }
+  try{
+    const numId = isNaN(id) ? id : Number(id);
+    console.log('🗑️ Attempting delete for id:', numId, typeof numId);
+    // Try all possible primary key column names
+    const pkCol = allEnquiries.length > 0 ? Object.keys(allEnquiries[0]).find(k => k==='id'||k==='ID'||k==='enquiry_id'||k==='rowid') || Object.keys(allEnquiries[0])[0] : 'id';
+    console.log('Using primary key column:', pkCol, '| All columns:', allEnquiries.length>0?Object.keys(allEnquiries[0]):[]);
+    const { data, error } = await sb.from('enquiries').delete().eq(pkCol, numId).select();
+    console.log('Delete response — data:', data, '| error:', error);
+    if(error) throw error;
+    // Compare as strings to handle numeric vs string ID mismatch
+    allEnquiries = allEnquiries.filter(e => String(e.id) !== String(id));
+    updateStats(); renderTable();
+    showToast('🗑️ Enquiry deleted successfully');
+  } catch(err){
+    console.error('Delete exception:', err);
+    showToast('❌ Delete failed: '+err.message,'error');
+  }
+}
+
+// ══════════════════════════════════
+// CHANGE USERNAME — saved to Supabase
+// ══════════════════════════════════
+async function changeUsername(){
+  const newU  = document.getElementById('newUsername').value.trim();
+  const confP = document.getElementById('confirmPassForUsername').value;
+  const errEl = document.getElementById('usernameError');
+  const sucEl = document.getElementById('usernameSuccess');
+  errEl.style.display='none'; sucEl.style.display='none';
+
+  if(!newU){ errEl.textContent='❌ Please enter a new username.'; errEl.style.display='block'; return; }
+  if(!confP){ errEl.textContent='❌ Please enter your current password.'; errEl.style.display='block'; return; }
+
+  if(!sb){
+    errEl.textContent='❌ Supabase not configured yet.';
+    errEl.style.display='block'; return;
+  }
+
+  try{
+    // Verify current password first
+    const { data, error } = await sb
+      .from('admin_users')
+      .select('*')
+      .eq('username', loggedInUsername)
+      .eq('password', confP)
+      .single();
+
+    if(error || !data){
+      errEl.textContent='❌ Current password is wrong.';
+      errEl.style.display='block'; return;
+    }
+
+    // Update username in Supabase
+    const { error: updateErr } = await sb
+      .from('admin_users')
+      .update({ username: newU })
+      .eq('username', loggedInUsername);
+
+    if(updateErr) throw updateErr;
+
+    loggedInUsername = newU;
+    document.getElementById('currentUsernameDisplay').textContent = newU;
+    document.getElementById('newUsername').value = '';
+    document.getElementById('confirmPassForUsername').value = '';
+    sucEl.style.display = 'block';
+    showToast('✅ Username changed to: ' + newU);
+    setTimeout(()=> sucEl.style.display='none', 4000);
+
+  } catch(err){
+    errEl.textContent = '❌ Error: ' + err.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ══════════════════════════════════
+// CHANGE PASSWORD — saved to Supabase
+// ══════════════════════════════════
+async function changePassword(){
+  const curP  = document.getElementById('currentPassword').value;
+  const newP  = document.getElementById('newPassword').value;
+  const conP  = document.getElementById('confirmPassword').value;
+  const errEl = document.getElementById('passwordError');
+  const sucEl = document.getElementById('passwordSuccess');
+  errEl.style.display='none'; sucEl.style.display='none';
+
+  if(!curP){ errEl.textContent='❌ Please enter your current password.'; errEl.style.display='block'; return; }
+  if(newP.length < 6){ errEl.textContent='❌ New password must be at least 6 characters.'; errEl.style.display='block'; return; }
+  if(newP !== conP){ errEl.textContent='❌ New passwords do not match.'; errEl.style.display='block'; return; }
+
+  if(!sb){
+    errEl.textContent='❌ Supabase not configured yet.';
+    errEl.style.display='block'; return;
+  }
+
+  try{
+    // Verify current password first
+    const { data, error } = await sb
+      .from('admin_users')
+      .select('*')
+      .eq('username', loggedInUsername)
+      .eq('password', curP)
+      .single();
+
+    if(error || !data){
+      errEl.textContent='❌ Current password is wrong.';
+      errEl.style.display='block'; return;
+    }
+
+    // Update password in Supabase
+    const { error: updateErr } = await sb
+      .from('admin_users')
+      .update({ password: newP })
+      .eq('username', loggedInUsername);
+
+    if(updateErr) throw updateErr;
+
+    document.getElementById('currentPassword').value='';
+    document.getElementById('newPassword').value='';
+    document.getElementById('confirmPassword').value='';
+    sucEl.style.display='block';
+    showToast('✅ Password changed successfully!');
+    setTimeout(()=> sucEl.style.display='none', 4000);
+
+  } catch(err){
+    errEl.textContent = '❌ Error: ' + err.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+function showToast(msg, type='success'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type==='error' ? 'error show' : 'show';
+  setTimeout(()=> t.className='', 4000);
+}
+
+// ══════════════════════════════════
+// ALL BUTTON LISTENERS (event delegation)
+// ══════════════════════════════════
+document.addEventListener('DOMContentLoaded', function(){
+
+  // Modal buttons
+  document.getElementById('btnCancelDelete').addEventListener('click', function(){
+    deleteTargetId = null;
+    document.getElementById('deleteModal').classList.remove('show');
+  });
+
+  document.getElementById('btnConfirmDelete').addEventListener('click', function(){
+    console.log('✅ Yes Delete clicked! deleteTargetId =', deleteTargetId);
+    confirmDelete();
+  });
+
+  // Table action buttons — delegate on document so it survives re-renders
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('button[data-id]');
+    if(!btn) return;
+    const id = btn.getAttribute('data-id');
+    if(!id) return;
+    console.log('Button clicked, id:', id);
+
+    if(btn.classList.contains('btn-delete')){
+      deleteTargetId = id;
+      console.log('deleteTargetId set to:', deleteTargetId);
+      document.getElementById('deleteModal').classList.add('show');
+    } else if(btn.getAttribute('data-status')){
+      updateStatus(id, btn.getAttribute('data-status'));
+    }
+  });
+});
+</script>
+</body>
+</html>

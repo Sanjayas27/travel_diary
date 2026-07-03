@@ -110,10 +110,10 @@
     .hero-particles span{position:absolute;width:2px;height:2px;background:var(--sky);border-radius:50%;animation:floatUp linear infinite;opacity:.5;}
     @keyframes floatUp{0%{transform:translateY(100vh);opacity:0;}10%{opacity:.5;}90%{opacity:.5;}100%{transform:translateY(-100px);opacity:0;}}
     .hero-content{position:relative;z-index:1;max-width:600px;}
-    .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(41, 181, 246, 0.192);border:1px solid rgba(41,182,246,.3);padding:10px 16px;border-radius:40px;font-size:1rem;color:var(--sky);font-weight:600;letter-spacing:1px;margin-top: 60px;margin-bottom:20px;}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(41,182,246,.12);border:1px solid rgba(41,182,246,.3);padding:10px 16px;border-radius:30px;font-size:.8rem;color:var(--sky);font-weight:600;letter-spacing:1px;margin-top: 60px;margin-bottom:20px;}
     h1.hero-title{font-family:'Montserrat',sans-serif;font-weight:900;font-size:clamp(2.4rem,6vw,4rem);line-height:1.1;margin-bottom:20px;}
     h1.hero-title span{color:var(--sky);}
-    .hero-desc{font-size:1.05rem;color:var(--white);line-height:1.7;margin-bottom:36px;max-width:480px;}
+    .hero-desc{font-size:1.05rem;color:var(--gray);line-height:1.7;margin-bottom:36px;max-width:480px;}
     .hero-btns{display:flex;gap:16px;flex-wrap:wrap;}
     .btn-primary{background:linear-gradient(135deg,var(--sky),var(--blue));color:var(--white);padding:14px 32px;border-radius:40px;font-weight:700;font-size:1rem;text-decoration:none;transition:.2s;display:inline-block;}
     .btn-primary:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(41,182,246,.5);}
@@ -132,7 +132,7 @@
     }
     .hero-stats{display:flex;gap:40px;margin-top:50px;flex-wrap:wrap;}
     .stat-num{font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.8rem;color:var(--sky);}
-    .stat-label{font-size:.8rem;color:var(--white);text-transform:uppercase;letter-spacing:1px;}
+    .stat-label{font-size:.8rem;color:var(--gray);text-transform:uppercase;letter-spacing:1px;}
 
     /* SECTIONS */
     section{padding:80px var(--px);}
@@ -1612,11 +1612,9 @@ function goToService(serviceName){
 
   let images = [...DEFAULT_IMAGES];
   let current = 0;
-  let slides = [
-    document.getElementById('slide0'),
-    document.getElementById('slide1')
-  ];
   let activeSlide = 0;
+  let slides = [];
+  let slideshowTimer = null;
 
   function showNext(){
     current = (current + 1) % images.length;
@@ -1624,32 +1622,46 @@ function goToService(serviceName){
     if(slides[next]){
       slides[next].style.backgroundImage = 'url(' + images[current] + ')';
       slides[next].style.opacity = '1';
-      slides[activeSlide].style.opacity = '0';
+      if(slides[activeSlide]) slides[activeSlide].style.opacity = '0';
       activeSlide = next;
     }
   }
 
   function initSlideshow(imgs){
+    // Get elements fresh every time
+    slides = [
+      document.getElementById('slide0'),
+      document.getElementById('slide1')
+    ];
+    if(!slides[0] || !slides[1]){ console.warn('Slideshow elements not found'); return; }
     images = imgs;
     current = 0;
-    if(slides[0]) slides[0].style.backgroundImage = 'url(' + images[0] + ')';
-    if(slides[1]) slides[1].style.backgroundImage = 'url(' + images[1 % images.length] + ')';
-    setInterval(showNext, 5500);
+    activeSlide = 0;
+    slides[0].style.backgroundImage = 'url(' + images[0] + ')';
+    slides[0].style.opacity = '1';
+    slides[1].style.backgroundImage = 'url(' + images[1 % images.length] + ')';
+    slides[1].style.opacity = '0';
+    if(slideshowTimer) clearInterval(slideshowTimer);
+    slideshowTimer = setInterval(showNext, 5500);
+    console.log('Slideshow started with', images.length, 'images');
   }
 
   async function startSlideshow(){
-    // Try Supabase first
-    if(typeof sb !== 'undefined' && sb){
-      try{
+    // Start with defaults immediately
+    initSlideshow(DEFAULT_IMAGES);
+
+    // Then try to load from Supabase and replace
+    try{
+      // Wait a bit for sb to be initialized
+      await new Promise(r => setTimeout(r, 1000));
+      if(typeof sb !== 'undefined' && sb){
         const {data} = await sb.from('hero_slides').select('image_url').eq('active',true).order('sort_order');
         if(data && data.length >= 1){
+          console.log('Slideshow: loaded', data.length, 'custom images from Supabase');
           initSlideshow(data.map(d => d.image_url));
-          return;
         }
-      }catch(e){}
-    }
-    // Fallback to defaults
-    initSlideshow(DEFAULT_IMAGES);
+      }
+    }catch(e){ console.warn('Slideshow: using defaults', e); }
   }
 
   window.addEventListener('load', startSlideshow);

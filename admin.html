@@ -892,9 +892,12 @@ async function loadSlides(){
   const grid = document.getElementById('slidesAdminGrid');
   if(!grid) return;
   grid.innerHTML = '<p style="color:var(--sky);padding:32px;grid-column:1/-1;text-align:center;">⏳ Loading...</p>';
+  console.log('loadSlides: sb=', !!sb, 'grid=', !!grid);
   if(!sb){ grid.innerHTML='<p style="color:var(--red);padding:32px;grid-column:1/-1;text-align:center;">⚠️ Supabase not configured.</p>'; return; }
   try{
+    console.log('loadSlides: querying hero_slides...');
     const {data,error} = await sb.from('hero_slides').select('*').order('sort_order');
+    console.log('loadSlides result:', data, error);
     if(error) throw error;
     if(!data||!data.length){ grid.innerHTML='<p style="color:var(--gray);padding:32px;grid-column:1/-1;text-align:center;">No custom slides yet — website shows default images. Click "+ Add Slide" to get started.</p>'; return; }
     grid.innerHTML = data.map(p=>`

@@ -1104,7 +1104,7 @@ const TABLE_TITLES = {
 };
 
 function openForm(section, existingData=null){
-  formContext = { table: section==='whyus'?'why_us':section, section, id: existingData?.id||null };
+  formContext = { table: section==='whyus'?'why_us':section==='slides'?'hero_slides':section, section, id: existingData?.id||null };
   const fields = FORM_FIELDS[section];
   const title = existingData ? `✏️ Edit ${TABLE_TITLES[section]}` : `＋ Add ${TABLE_TITLES[section]}`;
   document.getElementById('formModalTitle').textContent = title;
@@ -1290,6 +1290,7 @@ async function saveForm(){
     else if(section==='services') loadServices();
     else if(section==='whyus') loadWhyUs();
     else if(section==='testimonials') loadTestimonials();
+    else if(section==='slides'){ tabLoaded['slides']=false; loadSlides(); }
     else if(section==='offers'){ tabLoaded['offers']=false; loadOffers(); }
     else if(section==='posters'){ tabLoaded['posters']=false; loadPosters(); }
   }catch(e){ showToast('❌ Error: '+e.message,'error'); }

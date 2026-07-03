@@ -285,6 +285,7 @@
     <div class="tab"        id="tab-whyus"       onclick="switchTab('whyus')">🏆 Why Choose Us</div>
     <div class="tab"        id="tab-testimonials"onclick="switchTab('testimonials')">💬 Testimonials</div>
     <div class="tab"        id="tab-contact"     onclick="switchTab('contact')">📞 Contact Info</div>
+    <div class="tab"        id="tab-slides"      onclick="switchTab('slides')">🖼️ Hero Slideshow</div>
     <div class="tab"        id="tab-offers"      onclick="switchTab('offers')">🔥 Offers</div>
     <div class="tab"        id="tab-posters"     onclick="switchTab('posters')">📢 Posters</div>
     <div class="tab"        id="tab-settings"    onclick="switchTab('settings')">⚙️ Settings</div>
@@ -407,6 +408,17 @@
         <button class="save-btn" onclick="saveContactInfo()" style="margin-top:8px;">💾 Save Contact Info</button>
         <div class="success-msg" id="contactSuccess">✅ Contact info saved and live on website!</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── HERO SLIDESHOW ── -->
+  <div class="page" id="page-slides">
+    <div class="cms-header">
+      <div><h2>🖼️ Hero Slideshow</h2><p>These images appear as a beautiful carousel in the hero section of the website.</p></div>
+      <button class="add-btn" onclick="openForm('slides')">＋ Add Slide</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;" id="slidesAdminGrid">
+      <p style="color:var(--gray);padding:32px;grid-column:1/-1;text-align:center;">⏳ Loading...</p>
     </div>
   </div>
 
@@ -876,6 +888,30 @@ async function loadWhyUs(){
   }catch(e){ document.getElementById('whyusBody').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">❌ Error: ${e.message}</td></tr>`; console.error(e); }
 }
 
+async function loadSlides(){
+  const grid = document.getElementById('slidesAdminGrid');
+  if(!grid) return;
+  grid.innerHTML = '<p style="color:var(--sky);padding:32px;grid-column:1/-1;text-align:center;">⏳ Loading...</p>';
+  if(!sb){ grid.innerHTML='<p style="color:var(--red);padding:32px;grid-column:1/-1;text-align:center;">⚠️ Supabase not configured.</p>'; return; }
+  try{
+    const {data,error} = await sb.from('hero_slides').select('*').order('sort_order');
+    if(error) throw error;
+    if(!data||!data.length){ grid.innerHTML='<p style="color:var(--gray);padding:32px;grid-column:1/-1;text-align:center;">No custom slides yet — website shows default images. Click "+ Add Slide" to get started.</p>'; return; }
+    grid.innerHTML = data.map(p=>`
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(41,182,246,.15);border-radius:12px;overflow:hidden;">
+        <img src="${p.image_url}" style="width:100%;height:160px;object-fit:cover;display:block;" alt="${p.label||'Slide'}"/>
+        <div style="padding:12px;">
+          <div style="font-weight:700;font-size:.88rem;margin-bottom:10px;">${p.label||'Untitled'}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge ${p.active!==false?'badge-active':'badge-inactive'}">${p.active!==false?'Active':'Hidden'}</span>
+            <button class="action-btn btn-toggle" data-id="${p.id}" data-table="hero_slides" data-active="${p.active!==false}">👁 ${p.active!==false?'Hide':'Show'}</button>
+            <button class="action-btn btn-delete" data-id="${p.id}" data-table="hero_slides">🗑️</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }catch(e){ grid.innerHTML=`<p style="color:var(--red);padding:32px;grid-column:1/-1;">❌ Error: ${e.message}</p>`; }
+}
+
 async function loadOffers(){
   document.getElementById('offersBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--sky);">⏳ Loading...</td></tr>';
   if(!sb){ document.getElementById('offersBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">⚠️ Supabase not configured.</td></tr>'; return; }
@@ -1030,6 +1066,11 @@ const FORM_FIELDS = {
     {id:'description',label:'Description',type:'textarea',placeholder:'Why this matters to customers...'},
     {id:'sort_order',label:'Order (0=first)',type:'number',placeholder:'0'},
   ],
+  slides: [
+    {id:'label',label:'Location Label',placeholder:'e.g. Dubai, UAE'},
+    {id:'image_url',label:'Slide Image',type:'image',required:true},
+    {id:'sort_order',label:'Order (0=first)',type:'number',placeholder:'0'},
+  ],
   offers: [
     {id:'title',label:'Offer Title',placeholder:'e.g. Dubai Summer Special',required:true},
     {id:'discount',label:'Badge Text',placeholder:'e.g. 20% OFF or FLAT ₹5000 OFF'},
@@ -1055,7 +1096,7 @@ const FORM_FIELDS = {
 };
 
 const TABLE_TITLES = {
-  packages:'🌍 Package', services:'🛎️ Service', whyus:'🏆 Why Us Point', testimonials:'💬 Testimonial', offers:'🔥 Offer', posters:'📢 Poster'
+  packages:'🌍 Package', services:'🛎️ Service', whyus:'🏆 Why Us Point', testimonials:'💬 Testimonial', slides:'🖼️ Slide', offers:'🔥 Offer', posters:'📢 Poster'
 };
 
 function openForm(section, existingData=null){
@@ -1275,6 +1316,7 @@ async function confirmDelete(){
     else if(table==='services') loadServices();
     else if(table==='why_us') loadWhyUs();
     else if(table==='testimonials') loadTestimonials();
+    else if(table==='hero_slides'){ tabLoaded['slides']=false; loadSlides(); }
     else if(table==='offers'){ tabLoaded['offers']=false; loadOffers(); }
     else if(table==='posters'){ tabLoaded['posters']=false; loadPosters(); }
     showToast('🗑️ Deleted successfully');
@@ -1289,6 +1331,7 @@ async function toggleActive(id, table, currentActive){
     else if(table==='services') loadServices();
     else if(table==='why_us') loadWhyUs();
     else if(table==='testimonials') loadTestimonials();
+    else if(table==='hero_slides'){ tabLoaded['slides']=false; loadSlides(); }
     else if(table==='offers'){ tabLoaded['offers']=false; loadOffers(); }
     else if(table==='posters'){ tabLoaded['posters']=false; loadPosters(); }
     showToast(`✅ Item ${!currentActive?'shown':'hidden'} on website`);
